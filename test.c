@@ -187,7 +187,7 @@ void repeat_module()
 
 	UINT16 current_voltage;
 	UINT16 counter;
-	current_voltage = adc_to_volt_convertor((UINT32)get_adc_value());
+	current_voltage = adc_to_volt_converter((UINT32)get_adc_value());
 	PRINTF("------------------Starting repeat test sequence----------------------\r\n");
 	PRINTF("Current_voltage ==> %d\r\n", current_voltage);
 	PRINTF("Resetting counter to 0\r\n");	
@@ -217,7 +217,7 @@ void repeat_module()
 	}
 	PRINTF("------------------Finishing repeat test sequence----------------------\r\n");
 	PRINTF("Turning off discharge module\r\n");
-	current_voltage = adc_to_volt_convertor((UINT32)get_adc_value());
+	current_voltage = adc_to_volt_converter((UINT32)get_adc_value());
 	PRINTF("Current_voltage ==> %d\r\n\n", current_voltage);
 	
 }
