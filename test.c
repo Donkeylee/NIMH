@@ -69,7 +69,11 @@ void Init_System(void)
 
 UINT16 adc_to_volt_converter(unsigned long adc_value)
 {
-	return (int)(adc_value * ADC_REF_VALUE / MAX_ADC_VALUE);
+	//return current ADC value to mV value.
+	//this function required to fix 
+	//ADC_REF_VALUE : This value is current AREF voltage(recomending actual measured value)
+	//MAX_ADC_VALUE : this will be current CPU's maximum value of ADC(
+	return (UINT16)(adc_value * ADC_REF_VALUE / MAX_ADC_VALUE);
 }
 
 void charge_module()
