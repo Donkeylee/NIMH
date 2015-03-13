@@ -27,3 +27,9 @@
 *.i*86
 *.x86_64
 *.hex
+default/Makefile
+default/dep/test.o.d
+default/dep/util.o.d
+default/test.eep
+default/test.lss
+default/test.map
