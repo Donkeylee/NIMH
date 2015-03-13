@@ -10,11 +10,11 @@
 
 #define ONE_SEC 10
 
-volatile int length = 0;
+volatile UINT16 length = 0;
 volatile char buffer[256] = {0};
-extern volatile int g_what_to_do;
-volatile int value = 0;
-volatile unsigned int g_elapsed_sec = 0;
+extern volatile UINT16 g_what_to_do;
+volatile UINT16 value = 0;
+volatile UINT16 g_elapsed_sec = 0;
 
 SIGNAL(SIG_USART_RECV)
 {
@@ -25,7 +25,7 @@ SIGNAL(SIG_USART_RECV)
 
 SIGNAL(SIG_OUTPUT_COMPARE1A)// Timer1 OC1A interrupt function : 100ms Event
 {
-	volatile static int wSEC_counter = 0;
+	volatile static UINT16 wSEC_counter = 0;
 
 	if(++wSEC_counter == ONE_SEC)
 	{
@@ -89,7 +89,7 @@ void take_over(char recived_data)
 	buffer[length++]= recived_data;
 
 	char *pStr;
-	int i;
+	UINT16 i;
 
 
 	if(recived_data != 0x08)

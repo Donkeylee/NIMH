@@ -1,7 +1,17 @@
-#define STOP (unsigned int)0
-#define CHARGE (unsigned int)1
-#define DISCHARGE (unsigned int)2
-#define REPEAT (unsigned int)3
+typedef	unsigned char		UINT8;
+typedef	unsigned int		UINT16;
+typedef	unsigned long		UINT32;
+
+
+#define STOP (UINT16)0
+#define CHARGE (UINT16)1
+#define DISCHARGE (UINT16)2
+#define REPEAT (UINT16)3
+
+#define	INVALID8	((UINT8) -1)
+#define	INVALID16	((UINT16) -1)
+#define	INVALID32	((UINT32) -1)
+
 
 
 
