@@ -67,7 +67,7 @@ void Init_System(void)
 	sei(); //Global interrupt enable
 }
 
-UINT16 adc_to_volt_converter(unsigned long adc_value)
+UINT16 adc_to_volt_converter(UINT32 adc_value)
 {
 	//return current ADC value to mV value.
 	//this function required to fix 
@@ -88,7 +88,7 @@ void charge_module()
 	//6. current voltage(means voltage before start charge)*
 	//7. 10sec average todo
 	UINT16 current_voltage;
-	UINT16 unsigned int target_sec = 43200;//12 hrs with 24ohm 5volt supply
+	UINT16 target_sec = 43200;//12 hrs with 24ohm 5volt supply
 
 	current_voltage = adc_to_volt_converter((UINT32)get_adc_value());
 
