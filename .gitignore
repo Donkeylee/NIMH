@@ -33,3 +33,5 @@ default/dep/util.o.d
 default/test.eep
 default/test.lss
 default/test.map
+Makefile
+test.aps

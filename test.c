@@ -28,6 +28,9 @@ extern volatile UINT16 g_elapsed_sec;
 
 
 
+
+
+
 int get_adc_value(void)
 {
 	ADMUX = 0;
@@ -89,10 +92,11 @@ void charge_module()
 	//7. 10sec average todo
 	UINT16 current_voltage;
 	UINT16 target_sec = 43200;//12 hrs with 24ohm 5volt supply
+	UINT16 last_elapsed_sec;
 
 	current_voltage = adc_to_volt_converter((UINT32)get_adc_value());
 
-	PRINTF("------------------Starting charge sequence----------------------\r\n");
+	PRINTF("Start charge\r\n");
 	PRINTF("Current_voltage ==> %d\r\n", current_voltage);
 	PRINTF("Resetting timer to 0\r\n");	
 	g_elapsed_sec = 0;
@@ -103,10 +107,11 @@ void charge_module()
 	while(1)
 	{
 
-		if((g_elapsed_sec != 0) && (g_elapsed_sec % PRINT_FREQ == 0))
+		if((g_elapsed_sec != 0) && (last_elapsed_sec !=  g_elapsed_sec) && (g_elapsed_sec % PRINT_FREQ == 0))
 		{
+			last_elapsed_sec = g_elapsed_sec;
 			current_voltage = adc_to_volt_converter((UINT32)get_adc_value());
-			PRINTF("CHARGING(%d/%d) = %d\r\n", g_elapsed_sec, target_sec, current_voltage);
+			PRINTF("CHARGING(%u/%u) = \t%u\r\n", g_elapsed_sec, target_sec, current_voltage);
 		}
 
 		if(g_elapsed_sec >= target_sec)
@@ -117,7 +122,7 @@ void charge_module()
 		if(current_voltage >= MAX_CHARGE)
 		{
 			PRINTF("Charge voltage reached maximum value!\r\n");
-			break;
+			//break;
 		}
 		if(g_what_to_do == STOP)
 		{
@@ -125,7 +130,7 @@ void charge_module()
 			break;
 		}
 	}
-	PRINTF("------------------Finishing charge sequence----------------------\r\n");
+	PRINTF("Finish charge\r\n");
 	PRINTF("Turning off charge module\r\n");
 	//PORT xx |= FALSE;
 	current_voltage = adc_to_volt_converter((UINT32)get_adc_value());
@@ -143,8 +148,9 @@ void discharge_module()
 	//5. discharge port on *
 
 	UINT16 current_voltage;
+	UINT16 last_elapsed_sec;
 	current_voltage = adc_to_volt_converter((UINT32)get_adc_value());
-	PRINTF("------------------Starting discharge sequence----------------------\r\n");
+	PRINTF("discharge\r\n");
 	PRINTF("Current_voltage ==> %d\r\n", current_voltage);
 	PRINTF("Resetting timer to 0\r\n");	
 	g_elapsed_sec = 0;
@@ -153,11 +159,11 @@ void discharge_module()
 
 	while(1)
 	{
-
-		if((g_elapsed_sec != 0) && (g_elapsed_sec % PRINT_FREQ == 0))
+		if((g_elapsed_sec != 0) && (last_elapsed_sec !=  g_elapsed_sec) && (g_elapsed_sec % PRINT_FREQ == 0))
 		{
+			last_elapsed_sec = g_elapsed_sec;
 			current_voltage = adc_to_volt_converter((UINT32)get_adc_value());
-			PRINTF("DISCHARGING(%d) = %d\r\n", g_elapsed_sec, current_voltage);
+			PRINTF("DISCHARGING(%d) = \t%d\r\n", g_elapsed_sec, current_voltage);
 		}
 
 		if(current_voltage <= MIN_DISCHARGE)
@@ -171,7 +177,7 @@ void discharge_module()
 			break;
 		}
 	}
-	PRINTF("------------------Finishing discharge sequence----------------------\r\n");
+	PRINTF("Finish discharge\r\n");
 	PRINTF("Turning off discharge module\r\n");
 	//PORT xx |= FALSE;
 	current_voltage = adc_to_volt_converter((UINT32)get_adc_value());
@@ -240,7 +246,7 @@ int main(void)
 	{
 		while(g_what_to_do == STOP);
 		
-		
+
 		switch(g_what_to_do)
 		{
 			case CHARGE :

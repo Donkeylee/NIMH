@@ -13,6 +13,8 @@ typedef	unsigned long		UINT32;
 #define	INVALID32	((UINT32) -1)
 
 
+#define UART_BUF_SIZE 16
+
 
 
 
