@@ -28,9 +28,11 @@ extern volatile UINT16 g_elapsed_sec;
 
 
 
-int get_adc_value(void)
+int get_adc_value(UINT16 mux_number)
 {
-	ADMUX = 0;
+	//change this for select mux....
+	ADMUX = mux_number;
+	
 
 	ADCSRA = 0xE7;
 	while(ADCSRA &&(1<<ADIF) == 0);
@@ -87,6 +89,12 @@ void charge_module()
 	//5. manual stop*
 	//6. current voltage(means voltage before start charge)*
 	//7. 10sec average todo
+
+	//lets think about multiple batteries.
+	//It reqired
+	//1. Multiple ADC read function
+	//2. multiple charge ports(each port working independently)
+	
 	UINT16 current_voltage;
 	UINT16 target_sec = 43200;//12 hrs with 24ohm 5volt supply
 
