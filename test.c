@@ -111,7 +111,7 @@ void charge_module()
 		{
 			last_elapsed_sec = g_elapsed_sec;
 			current_voltage = adc_to_volt_converter((UINT32)get_adc_value());
-			PRINTF("CHARGING(%u/%u) = \t%u\r\n", g_elapsed_sec, target_sec, current_voltage);
+			PRINTF("CHARGING[%05u(%03u))/%05u(%03u)] = %04u\r\n", g_elapsed_sec, g_elapsed_sec/60, target_sec, target_sec/60, current_voltage);
 		}
 
 		if(g_elapsed_sec >= target_sec)
@@ -163,7 +163,7 @@ void discharge_module()
 		{
 			last_elapsed_sec = g_elapsed_sec;
 			current_voltage = adc_to_volt_converter((UINT32)get_adc_value());
-			PRINTF("DISCHARGING(%d) = \t%d\r\n", g_elapsed_sec, current_voltage);
+			PRINTF("DISCHARGING[%05u(%03u] = %05u\r\n", g_elapsed_sec, g_elapsed_sec/60, current_voltage);
 		}
 
 		if(current_voltage <= MIN_DISCHARGE)
