@@ -7,11 +7,13 @@ typedef	unsigned long		UINT32;
 #define CHARGE (UINT16)1
 #define DISCHARGE (UINT16)2
 #define REPEAT (UINT16)3
+#define TEST_MODE	(UINT16)4
 
 #define	INVALID8	((UINT8) -1)
 #define	INVALID16	((UINT16) -1)
 #define	INVALID32	((UINT32) -1)
 
+#define F_CPU 20000000UL
 
 #define UART_BUF_SIZE 16
 

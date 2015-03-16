@@ -5,17 +5,18 @@
 #include <avr/interrupt.h>
 #include <avr/signal.h>
 #include <string.h>
-#include <util/delay.h> 
 #include "test.h"
+#include <util/delay.h> 
+
 
 
 #define SKIP_ROM   0xCC 
 
-#define F_CPU 20000000UL
+
 
 
 #define PRINT_FREQ 10
-#define ADC_REF_VALUE 1700 //5.1V / 3 = 1.7Volt
+#define ADC_REF_VALUE 1691 //5.1V / 3 = 1.7Volt
 #define MAX_CHARGE 1600 //1.6V when full charge
 #define MAX_ADC_VALUE 1023 //defined on spec
 #define MIN_DISCHARGE 800 //0.8V Minimum discharge
@@ -31,9 +32,10 @@ extern volatile UINT16 g_elapsed_sec;
 
 
 
-int get_adc_value(void)
+int get_adc_value(UINT8 selected_adc)
 {
-	ADMUX = 0;
+	_delay_us(500);
+	ADMUX = selected_adc;
 
 	ADCSRA = 0xE7;
 	while(ADCSRA &&(1<<ADIF) == 0);
@@ -94,14 +96,11 @@ void charge_module()
 	UINT16 target_sec = 43200;//12 hrs with 24ohm 5volt supply
 	UINT16 last_elapsed_sec;
 
-	current_voltage = adc_to_volt_converter((UINT32)get_adc_value());
-
 	PRINTF("Start charge\r\n");
-	PRINTF("Current_voltage ==> %d\r\n", current_voltage);
+	PRINTF("Current_voltage_0 ==> %d\r\n", current_voltage);
 	PRINTF("Resetting timer to 0\r\n");	
 	g_elapsed_sec = 0;
 	PRINTF("Target time is %u second(%uhrs or %umins)\r\n", target_sec, target_sec/60/60, target_sec/60);
-	PRINTF("Turning on charge module\r\n");
 	//PORT xx |= TRUE;
 
 	while(1)
@@ -110,7 +109,7 @@ void charge_module()
 		if((g_elapsed_sec != 0) && (last_elapsed_sec !=  g_elapsed_sec) && (g_elapsed_sec % PRINT_FREQ == 0))
 		{
 			last_elapsed_sec = g_elapsed_sec;
-			current_voltage = adc_to_volt_converter((UINT32)get_adc_value());
+			current_voltage = adc_to_volt_converter((UINT32)get_adc_value(0));
 			PRINTF("CHARGING[%05u(%03u))/%05u(%03u)] = %04u\r\n", g_elapsed_sec, g_elapsed_sec/60, target_sec, target_sec/60, current_voltage);
 		}
 
@@ -121,7 +120,7 @@ void charge_module()
 		}
 		if(current_voltage >= MAX_CHARGE)
 		{
-			PRINTF("Charge voltage reached maximum value!\r\n");
+			PRINTF("Reached maximum Volt!\r\n");
 			//break;
 		}
 		if(g_what_to_do == STOP)
@@ -131,9 +130,8 @@ void charge_module()
 		}
 	}
 	PRINTF("Finish charge\r\n");
-	PRINTF("Turning off charge module\r\n");
 	//PORT xx |= FALSE;
-	current_voltage = adc_to_volt_converter((UINT32)get_adc_value());
+	current_voltage = adc_to_volt_converter((UINT32)get_adc_value(0));
 	PRINTF("Current_voltage ==> %d\r\n\n", current_voltage);
 	
 }
@@ -149,12 +147,11 @@ void discharge_module()
 
 	UINT16 current_voltage;
 	UINT16 last_elapsed_sec;
-	current_voltage = adc_to_volt_converter((UINT32)get_adc_value());
+	current_voltage = adc_to_volt_converter((UINT32)get_adc_value(0));
 	PRINTF("discharge\r\n");
 	PRINTF("Current_voltage ==> %d\r\n", current_voltage);
 	PRINTF("Resetting timer to 0\r\n");	
 	g_elapsed_sec = 0;
-	PRINTF("Turning on discharge module\r\n");
 	//PORT xx |= TRUE;
 
 	while(1)
@@ -162,13 +159,13 @@ void discharge_module()
 		if((g_elapsed_sec != 0) && (last_elapsed_sec !=  g_elapsed_sec) && (g_elapsed_sec % PRINT_FREQ == 0))
 		{
 			last_elapsed_sec = g_elapsed_sec;
-			current_voltage = adc_to_volt_converter((UINT32)get_adc_value());
+			current_voltage = adc_to_volt_converter((UINT32)get_adc_value(0));
 			PRINTF("DISCHARGING[%05u(%03u] = %05u\r\n", g_elapsed_sec, g_elapsed_sec/60, current_voltage);
 		}
 
 		if(current_voltage <= MIN_DISCHARGE)
 		{
-			PRINTF("Discharge voltage reached minimum value!\r\n");
+			PRINTF("Reached minimum Volt!\r\n");
 			break;
 		}
 		if(g_what_to_do == STOP)
@@ -178,13 +175,26 @@ void discharge_module()
 		}
 	}
 	PRINTF("Finish discharge\r\n");
-	PRINTF("Turning off discharge module\r\n");
 	//PORT xx |= FALSE;
-	current_voltage = adc_to_volt_converter((UINT32)get_adc_value());
+	current_voltage = adc_to_volt_converter((UINT32)get_adc_value(0));
 	PRINTF("Current_voltage ==> %d\r\n\n", current_voltage);
 	
 }
 
+#if 1
+void test_module()
+{
+	while(1)
+	{
+		PRINTF("a = %04u, b = %04u\r\n", adc_to_volt_converter((UINT32)get_adc_value(0)), adc_to_volt_converter((UINT32)get_adc_value(1)));
+		if(g_what_to_do == STOP)
+		{
+			PRINTF("Stop by user\r\n");
+			break;
+		}
+	}	
+}
+#endif
 
 void repeat_module()
 {
@@ -197,18 +207,15 @@ void repeat_module()
 
 	UINT16 current_voltage;
 	UINT16 counter;
-	current_voltage = adc_to_volt_converter((UINT32)get_adc_value());
-	PRINTF("------------------Starting repeat test sequence----------------------\r\n");
+	current_voltage = adc_to_volt_converter((UINT32)get_adc_value(0));
+	PRINTF("---Starting repeat test sequence---\r\n");
 	PRINTF("Current_voltage ==> %d\r\n", current_voltage);
 	PRINTF("Resetting counter to 0\r\n");	
-	counter = 0;	
-	
-
-
+	counter = 0;
 
 	while(1)
 	{
-		PRINTF("------------------%u----------------------\r\n", counter++);	
+		PRINTF("---%u---\r\n", counter++);	
 		charge_module();
 
 		if(g_what_to_do == STOP)
@@ -225,10 +232,11 @@ void repeat_module()
 			break;
 		}
 	}
-	PRINTF("------------------Finishing repeat test sequence----------------------\r\n");
+	PRINTF("---Finishing repeat test sequence---\r\n");
 	PRINTF("Turning off discharge module\r\n");
-	current_voltage = adc_to_volt_converter((UINT32)get_adc_value());
+	current_voltage = adc_to_volt_converter((UINT32)get_adc_value(0));
 	PRINTF("Current_voltage ==> %d\r\n\n", current_voltage);
+
 	
 }
 
@@ -239,7 +247,7 @@ int main(void)
 	Init_System();
 	g_what_to_do = STOP;
 
-	get_adc_value();// Required this.... i don't know why first time read ADC always 0???
+	get_adc_value(0);// Required this.... i don't know why first time read ADC always 0???
 	
 	
 	while(1)
@@ -258,6 +266,9 @@ int main(void)
 			break;
 			case REPEAT :
 				repeat_module();
+			break;
+			case TEST_MODE :
+				test_module();
 			break;
 		}
 		g_what_to_do = STOP;

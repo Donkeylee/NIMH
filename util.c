@@ -5,8 +5,9 @@
 #include <avr/interrupt.h>
 #include <avr/signal.h>
 #include <string.h>
-#include <util/delay.h> 
 #include "test.h"
+#include <util/delay.h> 
+
 
 #define ONE_SEC 10
 
@@ -82,15 +83,6 @@ void take_over(char recived_data)
 
 	if(buffer[length - 1] == 0x0D)
 	{
-
-#if 0
-		if(strstr(buffer, "adc") != 0)
-		{
-			PRINTF("\r\n");
-			PRINTF("current ADC = %d\r\n", get_adc_value());
-		}
-		else 
-#endif		
 		if(strstr(buffer, "d") != 0)
 		{
 			PRINTF("DIScharge\r\n");
@@ -105,6 +97,16 @@ void take_over(char recived_data)
 		{
 			PRINTF("stop charging\r\n");
 			g_what_to_do = STOP;
+		}
+		else if(strstr(buffer, "r") != 0)
+		{
+			PRINTF("Cycling mode\r\n");
+			g_what_to_do = REPEAT;
+		}
+		else if(strstr(buffer, "t") != 0)
+		{
+			PRINTF("Test mode\r\n");
+			g_what_to_do = TEST_MODE;
 		}		
 		else if(length == 1)
 		{
