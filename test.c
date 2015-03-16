@@ -10,7 +10,9 @@
 
 
 
-#define SKIP_ROM   0xCC 
+#define SKIP_ROM   0xCC
+
+#define TESTMODE
 
 
 
@@ -181,7 +183,7 @@ void discharge_module()
 	
 }
 
-#if 1
+#ifdef TESTMODE
 void test_module()
 {
 	while(1)
@@ -267,9 +269,11 @@ int main(void)
 			case REPEAT :
 				repeat_module();
 			break;
+#ifdef TESTMODE
 			case TEST_MODE :
 				test_module();
 			break;
+#endif
 		}
 		g_what_to_do = STOP;
 	}
