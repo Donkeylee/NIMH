@@ -21,7 +21,7 @@
 #define ADC_REF_VALUE 1691 //5.1V / 3 = 1.7Volt
 #define MAX_CHARGE 1600 //1.6V when full charge
 #define MAX_ADC_VALUE 1023 //defined on spec
-#define MIN_DISCHARGE 800 //0.8V Minimum discharge
+#define MIN_DISCHARGE 0 //0.8V Minimum discharge
 
 
 volatile UINT16 g_what_to_do = 0;
@@ -47,7 +47,20 @@ int get_adc_value(UINT8 selected_adc)
 
 void Init_System(void)
 {
+	//PORTD 0 = RX
+
+	//PORTD 5 = charge ch0
+	//PORTD 6 = discharge ch0
+
+	//PORTD 7 = charge ch1
+	//PORTB 0 = discharge ch1
+
+	//PORTC 0 = CH 0 ADC
+	//PORTC 1 = CH 1 ADC
+
+
 	DDRD = 0xFE;
+	DDRB = 0xFF;
 	//PORTD |= 0xC0;
 
 	//보-레이트 115.2kbps,비동기식,패리티 없음,스탑 1bit,문자열 사이즈 8bit,상승 엣지 검출
@@ -68,6 +81,7 @@ void Init_System(void)
 	TIMSK1 = 0x02;
 	TIFR1 = 0x00;
 	//CTC mode : 주파수 10Hz(0.1s의 주파수는 10Hz이나 0.1s에는 두번의 Event가 발생하므로 10Hz/2 해서 5Hz 
+
 
 	
 	
@@ -103,7 +117,9 @@ void charge_module()
 	PRINTF("Resetting timer to 0\r\n");	
 	g_elapsed_sec = 0;
 	PRINTF("Target time is %u second(%uhrs or %umins)\r\n", target_sec, target_sec/60/60, target_sec/60);
-	//PORT xx |= TRUE;
+
+	PORTD |= (1<<5);
+	PORTD |= (1<<7);	
 
 	while(1)
 	{
@@ -132,7 +148,10 @@ void charge_module()
 		}
 	}
 	PRINTF("Finish charge\r\n");
-	//PORT xx |= FALSE;
+
+
+	PORTD &= ~((1<<5) & 0xFF);
+	PORTD &= ~((1<<7) & 0xFF);	
 	current_voltage = adc_to_volt_converter((UINT32)get_adc_value(0));
 	PRINTF("Current_voltage ==> %d\r\n\n", current_voltage);
 	
@@ -147,39 +166,65 @@ void discharge_module()
 	//4. manual stop *
 	//5. discharge port on *
 
-	UINT16 current_voltage;
+	UINT16 current_voltage_0;
+	UINT16 current_voltage_1;
 	UINT16 last_elapsed_sec;
-	current_voltage = adc_to_volt_converter((UINT32)get_adc_value(0));
+	UINT16 finish_flag = 0;
+	current_voltage_0 = adc_to_volt_converter((UINT32)get_adc_value(0));
+	current_voltage_1 = adc_to_volt_converter((UINT32)get_adc_value(1));
 	PRINTF("discharge\r\n");
-	PRINTF("Current_voltage ==> %d\r\n", current_voltage);
+	PRINTF("Current_voltage ==> PORT 0 : %u, PORT 1 : %u\r\n", current_voltage_0, current_voltage_1);
 	PRINTF("Resetting timer to 0\r\n");	
 	g_elapsed_sec = 0;
-	//PORT xx |= TRUE;
+	PORTD |= (1<<6); //ch0 discharge
+	PORTB |= (1<<0); //ch1 discharge
+
 
 	while(1)
 	{
 		if((g_elapsed_sec != 0) && (last_elapsed_sec !=  g_elapsed_sec) && (g_elapsed_sec % PRINT_FREQ == 0))
 		{
 			last_elapsed_sec = g_elapsed_sec;
-			current_voltage = adc_to_volt_converter((UINT32)get_adc_value(0));
-			PRINTF("DISCHARGING[%05u(%03u] = %05u\r\n", g_elapsed_sec, g_elapsed_sec/60, current_voltage);
+			current_voltage_0 = adc_to_volt_converter((UINT32)get_adc_value(0));
+			current_voltage_1 = adc_to_volt_converter((UINT32)get_adc_value(1));			
+			PRINTF("DISCHARGING[%05u(%03u] ==> %u\t%u\r\n", g_elapsed_sec, g_elapsed_sec/60, current_voltage_0, current_voltage_1);
 		}
 
-		if(current_voltage <= MIN_DISCHARGE)
+		if(current_voltage_0 <= MIN_DISCHARGE && ((finish_flag & 1) == 0))
 		{
-			PRINTF("Reached minimum Volt!\r\n");
-			break;
+			PRINTF("PORT 0 Reached minimum Volt!\r\n");
+			finish_flag |= 1 << 0;
+			PORTD &= ~((1<<6) & 0xFF);
+			//PORTB &= ~((1<<0) & 0xFF);
 		}
+
+		if(current_voltage_1 <= MIN_DISCHARGE && ((finish_flag & 2) == 0))
+		{
+			PRINTF("PORT 1 Reached minimum Volt!\r\n");
+			finish_flag |= 1 << 1;
+			//PORTD &= ~((1<<6) & 0xFF);
+			PORTB &= ~((1<<0) & 0xFF);
+		}
+
+		if(finish_flag == 3)
+			break;
+		
 		if(g_what_to_do == STOP)
 		{
 			PRINTF("Stop by user\r\n");
+			PORTD &= ~((1<<6) & 0xFF);
+			PORTB &= ~((1<<0) & 0xFF);
 			break;
 		}
 	}
 	PRINTF("Finish discharge\r\n");
-	//PORT xx |= FALSE;
-	current_voltage = adc_to_volt_converter((UINT32)get_adc_value(0));
-	PRINTF("Current_voltage ==> %d\r\n\n", current_voltage);
+
+
+
+	current_voltage_0 = adc_to_volt_converter((UINT32)get_adc_value(0));
+	current_voltage_1 = adc_to_volt_converter((UINT32)get_adc_value(1));
+
+	PRINTF("Current_voltage ==> PORT 0 : %u, PORT 1 : %u\r\n\n", current_voltage_0, current_voltage_1);
 	
 }
 
