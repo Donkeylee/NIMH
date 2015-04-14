@@ -139,7 +139,7 @@ void charge_module()
 		if(current_voltage >= MAX_CHARGE)
 		{
 			PRINTF("Reached maximum Volt!\r\n");
-			//break;
+			break;
 		}
 		if(g_what_to_do == STOP)
 		{
